@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">AppEversee</string>
+    <string name="txt_login">Login</string>
+    <string name="txt_password">Senha</string>
+    <string name="btn_enter">Entrar</string>
+    <string name="lnk_forgot_password">Esqueceu a senha?</string>
+</resources>

@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">AppEversee</string>
+    <string name="txt_login">Login</string>
+    <string name="txt_password">Password</string>
+    <string name="btn_enter">Enter</string>
+    <string name="lnk_forgot_password">Forgot password?</string>
+    <string name="msg_login_error">Login field not filled up</string>
+    <string name="msg_password_error">Password field not filled up</string>
+</resources>
