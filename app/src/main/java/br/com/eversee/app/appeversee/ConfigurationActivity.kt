@@ -18,13 +18,46 @@ class ConfigurationActivity : AppCompatActivity() {
 
 
         val btnUsageMobData = findViewById<Button>(R.id.btnUsingMobileData)
-
+        val btnUsageWiFi = findViewById<Button>(R.id.btnUsingWiFi)
 
         val context = this
 
         var list = mutableListOf<Int>(0,0,0,0)
 
         btnUsageMobData.setOnClickListener {
+            val view = layoutInflater.inflate(R.layout.pop_config_sinc, null,false)
+
+            var builder = AlertDialog.Builder(this)
+
+            builder.setView(view)
+
+
+
+            var alerta = builder.create()
+            alerta.show()
+
+            //var audio = alerta.findViewById<CheckBox>(R.id.chkboxAudio)
+
+            view.findViewById<Button>(R.id.btnConfigCancel).setOnClickListener(object : View.OnClickListener {
+                override fun onClick(arg0: View) {
+                    //Toast.makeText(this@MainActivity, "alerta.dismiss()", Toast.LENGTH_SHORT).show()
+                    alerta.dismiss()
+                }
+            })
+
+            view.findViewById<Button>(R.id.btnConfigOK).setOnClickListener ( object: View.OnClickListener {
+                override fun onClick(arg0: View) {
+                    if (alerta.findViewById<CheckBox>(R.id.chkboxAudio).isChecked) {
+                        list[0] = 1
+                    }else if (!findViewById<CheckBox>(R.id.chkboxAudio).isChecked){
+                        list[0] = 0
+                    }
+                }
+
+            })
+        }
+
+        btnUsageWiFi.setOnClickListener {
             val view = layoutInflater.inflate(R.layout.pop_config_sinc, null,false)
 
 
@@ -37,7 +70,7 @@ class ConfigurationActivity : AppCompatActivity() {
             var alerta = builder.create()
             alerta.show()
 
-            var audio = findViewById<CheckBox>(R.id.chkboxAudio)
+            //var audio = findViewById<CheckBox>(R.id.chkboxAudio)
 
             view.findViewById<Button>(R.id.btnConfigCancel).setOnClickListener(object : View.OnClickListener {
                 override fun onClick(arg0: View) {
@@ -48,17 +81,14 @@ class ConfigurationActivity : AppCompatActivity() {
 
             view.findViewById<Button>(R.id.btnConfigOK).setOnClickListener ( object: View.OnClickListener {
                 override fun onClick(arg0: View) {
-                    if (audio.isChecked) {
+                    /*if (audio.isChecked) {
                         list[0] = 1
                     }else if (!findViewById<CheckBox>(R.id.chkboxAudio).isChecked){
                         list[0] = 0
-                    }
+                    }*/
                 }
 
             })
-
-            Log.i("A",list.toString())
-            Log.i("A", "A")
         }
 
 
