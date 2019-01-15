@@ -1,5 +1,8 @@
 package br.com.eversee.app.appeversee
 
+import android.app.DownloadManager
+import android.content.ContentValues
+import android.content.Intent
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.support.v7.app.AlertDialog
@@ -7,17 +10,21 @@ import android.util.Log
 import android.view.View
 import android.widget.Button
 import android.widget.EditText
+import android.widget.TextView
+import android.widget.Toast
 import br.com.eversee.app.appeversee.app.AppConfig
 import java.math.BigInteger
 import java.security.MessageDigest
 import br.com.eversee.app.appeversee.common.InternetValidation
-import br.com.eversee.app.appeversee.dao.DataBaseHandler
-import br.com.eversee.app.appeversee.dao.User
+import br.com.eversee.app.appeversee.dao.DataBaseUserHandler
+import br.com.eversee.app.appeversee.dao.UserLogin
+import com.android.volley.Request
+import com.android.volley.RequestQueue
+import com.android.volley.Response
+import com.android.volley.toolbox.*
+import kotlinx.android.synthetic.main.activity_main.*
 import org.json.JSONObject
-import java.net.HttpURLConnection
-import java.net.URL
-import java.io.BufferedWriter
-import java.io.OutputStreamWriter
+import java.lang.reflect.Method
 
 
 class MainActivity : AppCompatActivity() {
@@ -32,73 +39,118 @@ class MainActivity : AppCompatActivity() {
 
         var btnLogin = findViewById<Button>(R.id.btnLogin)
 
+        var labelError = findViewById<TextView>(R.id.txtError)
+
         val context = this
 
         btnLogin.setOnClickListener {
 
 
-            var messageError = loginFilledupIncorrect(user, password)
-            if (messageError.length != 0){
-                showAlertLogin(messageError + user.text)
-                password.setBackgroundResource(R.drawable.login_field_error)
-                user.setBackgroundResource(R.drawable.login_field_error)
-            }else{
+            var messageError = loginFilledupIncorrect(user, password, labelError)
+            if (!loginFilledupIncorrect(user, password, labelError)){
                 if (InternetValidation().verifyAvailableNetwork(this@MainActivity)){
-                    showAlertLogin("With internet")
+                    //showAlertLogin("With internet")
 
                     try{
 
-                        var gerarHash="!Visual+" + user.text.toString()+password.text.toString().toUpperCase()
+
+
+                        var gerarHash="!Visual+" + user.text.toString().trim().toUpperCase()+
+                                password.text.toString().trim().toUpperCase()
                         var hash=  md5hashing(gerarHash)
                         var hashGerado = hash!!.toUpperCase()
 
-                        val url = URL(AppConfig.URL_LOGIN)
-                        val conn = url.openConnection() as HttpURLConnection
-                        conn.setRequestMethod("POST")
-                        conn.setRequestProperty("Content-Type", "application/json;charset=UTF-8")
-                        conn.setRequestProperty("Accept", "application/json")
-                        conn.setDoOutput(true)
-                        conn.setDoInput(true)
+                        val queue = Volley.newRequestQueue(this)
 
-                        val jsonParam = JSONObject()
-                        jsonParam.put("method", "LOGIN")
-                        jsonParam.put("username", user.text.toString())
-                        jsonParam.put("password", password.text.toString())
-                        jsonParam.put("Versao", "21.8")
-                        jsonParam.put("IOS", "12.1")
-                        jsonParam.put("NomeEquip", "iPad Air 2")
-                        jsonParam.put("HASH", hashGerado)
+                        val fullString = AppConfig.URL_LOGIN + "?method=LOGIN" +"&username=" + user.text.toString() +
+                                         "&password=" + password.text.toString() + "&Versao=" +
+                                        "21.8" + "&IOS=" + "12.8" + "&NomeEquip=" + "iPad Air 2".replace(" ","_") +
+                                        "&HASH=" + hashGerado
 
-                        Log.i("JSON", jsonParam.toString());
-                        //var os = OutputStream(conn.getOutputStream());
-                        //os.writeBytes(URLEncoder.encode(jsonParam.toString(), "UTF-8"));
-                        //os.(jsonParam.toString());
+                        Log.i("Request URL", fullString)
 
-                        val outputStream = conn.getOutputStream()
-                        val writer = BufferedWriter(OutputStreamWriter(outputStream, "UTF-8"))
 
-                        //.flush();
-                        //os.close();
+                        // Instantiate the cache
+                        val cache = DiskBasedCache(cacheDir, 1024 * 1024) // 1MB cap
 
-                        Log.i("STATUS", conn.getResponseCode().toString());
-                        Log.i("MSG" , conn.getResponseMessage());
+// Set up the network to use HttpURLConnection as the HTTP client.
+                        val network = BasicNetwork(HurlStack())
 
-                        conn.disconnect();
-                    } catch (e: java.lang.Exception) {
+// Instantiate the RequestQueue with the cache and network. Start the queue.
+                        val requestQueue = RequestQueue(cache, network).apply {
+                            start()
+                        }
+
+
+                        val stringRequest = object: StringRequest(Method.POST, fullString,
+                                Response.Listener { response ->
+
+                            try {
+
+                                val jObj = JSONObject(response)
+                                val error = response.contains("ERRO")
+
+                                if (!error) {
+
+                                    Log.i("OK", "OK")
+                                    Log.println(Log.INFO,"Title","OK")
+
+                                    var user = UserLogin(jObj.getInt("RESULTADO"),user.text.toString(),password.text.toString(),
+                                            0,0,0, "",0,0,0)
+
+                                    if (DataBaseUserHandler(context).readData(user).size == 1){
+                                        DataBaseUserHandler(context).updateData(user)
+                                    }else{
+                                        DataBaseUserHandler(context).insertDataLogin(user)
+                                    }
+
+                                    val itConfig = Intent(this@MainActivity, ConfigurationActivity::class.java)
+                                    startActivity(itConfig)
+
+                                }else{
+                                    labelError.text = "User and/or password are incorrect"
+                                }
+                            } catch (e: Exception) {
+                                Toast.makeText(context,"Not possible to get information. Try again later",Toast.LENGTH_SHORT).show()
+                            }
+
+                        }, Response.ErrorListener { e ->
+                            showAlertLogin("Não foi possível realizar consulta")
+                        })
+                        {
+                            override fun getParams(): Map<String, String> {
+                                // Posting parameters to login url
+                                val params = HashMap<String, String>()
+                                params["email"] = user.text.toString()
+                                params["password"] = password.text.toString()
+                                return params
+                            }
+                        }
+
+
+
+                        queue.add(stringRequest)
+
+
+                    } catch (e: Exception) {
                         Log.e(e.message, e.message)
+                        Log.i("OK", e.message)
                         //e.printStackTrace();
                     }
 
-                }else{
-                    var user = User(0,user.text.toString(),password.text.toString(),0,0,0
-                    ,"",0,0,0)
-                    var totalItens = DataBaseHandler(context).readData(user).size
 
-                    if (totalItens==0){
+
+                }else{
+                    showAlertLogin("No internet")
+                    var user = UserLogin(0,user.text.toString(),password.text.toString(),0,0,0
+                    ,"",0,0,0)
+                    //var totalItens = DataBaseHandler(context).readData(user).size
+
+                    /*if (totalItens==0){
                         showAlertLogin("Erro")
                     }else{
                         showAlertLogin("OK")
-                    }
+                    }*/
                 }
             }
 
@@ -108,28 +160,34 @@ class MainActivity : AppCompatActivity() {
 
 
         }
-
-
-
     }
 
-    fun loginFilledupIncorrect(user: EditText, password: EditText): String {
+    fun loginFilledupIncorrect(user: EditText, password: EditText, errorLabel: TextView) : Boolean{
 
         var messageError = ""
 
+       // showAlertLogin(messageError + user.text)
+
         if (user.text.isEmpty()) {
             messageError += getString(R.string.msg_login_error)
-
+            user.setBackgroundResource(R.drawable.login_field_error)
         }
 
         if (password.length() == 0 && messageError.contains(getString(R.string.msg_login_error))){
             messageError += "\n" + getString(R.string.msg_password_error)
+            password.setBackgroundResource(R.drawable.login_field_error)
 
         }else if(password.text.isEmpty()){
             messageError += getString(R.string.msg_password_error)
+            password.setBackgroundResource(R.drawable.login_field_error)
         }
 
-        return messageError
+        if (!messageError.isEmpty()) {
+            errorLabel.text = messageError
+            return true
+        }
+
+        return false
     }
 
     fun md5hashing(text: String): String? {
@@ -167,7 +225,7 @@ class MainActivity : AppCompatActivity() {
         var alerta = builder.create()
         alerta.show()
 
-        view.findViewById<Button>(R.id.bt).setOnClickListener(object : View.OnClickListener {
+        view.findViewById<Button>(R.id.btnConfigCancel).setOnClickListener(object : View.OnClickListener {
             override fun onClick(arg0: View) {
                 //Toast.makeText(this@MainActivity, "alerta.dismiss()", Toast.LENGTH_SHORT).show()
                 alerta.dismiss()

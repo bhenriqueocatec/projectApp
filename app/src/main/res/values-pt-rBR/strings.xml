@@ -4,4 +4,13 @@
     <string name="txt_password">Senha</string>
     <string name="btn_enter">Entrar</string>
     <string name="lnk_forgot_password">Esqueceu a senha?</string>
+
+    <string name="when_mobile_data">Quando usar dados de rede</string>
+    <string name="configuration_title">Configuração</string>
+    <string name="audio">Áudio</string>
+    <string name="database">Banco de Dados</string>
+    <string name="picture">Foto</string>
+    <string name="video">Video</string>
+    <string name="cancel">Cancelar</string>
+    <string name="ok">OK</string>
 </resources>

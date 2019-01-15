@@ -1,4 +1,10 @@
 <resources>
+    <string name="language_prompt">Choose a language</string>
+    <string-array name="language_options">
+        <item>English (United States)</item>
+        <item>Portuguese (Brazil)</item>
+        <item>Spanish (Spain)</item>
+    </string-array>
     <string name="app_name">AppEversee</string>
     <string name="txt_login">Login</string>
     <string name="txt_password">Password</string>
@@ -6,4 +12,15 @@
     <string name="lnk_forgot_password">Forgot password?</string>
     <string name="msg_login_error">Login field not filled up</string>
     <string name="msg_password_error">Password field not filled up</string>
+
+    <string name="when_mobile_data">When using mobile data</string>
+    <string name="configuration_title">Settings</string>
+    <string name="audio">Audio</string>
+    <string name="database">Database</string>
+    <string name="picture">Picture</string>
+    <string name="video">Video</string>
+    <string name="cancel">Cancel</string>
+    <string name="ok">OK</string>
+
+
 </resources>

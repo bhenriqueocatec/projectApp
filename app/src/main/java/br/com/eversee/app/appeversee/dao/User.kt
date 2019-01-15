@@ -1,6 +1,6 @@
 package br.com.eversee.app.appeversee.dao
 
-class User{
+class UserLogin{
     var id: Int = 0
     var usuario: String = ""
     var senha: String = ""
