@@ -39,7 +39,7 @@ class DataBaseHandler(var context: Context): SQLiteOpenHelper(context, DATABASE_
     }
 
     override fun onUpgrade(db: SQLiteDatabase?,oldVersion: Int,newVersion: Int) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+       //To change body of created functions use File | Settings | File Templates.
     }
 
     fun insertData(user : User){
